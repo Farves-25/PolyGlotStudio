@@ -609,6 +609,10 @@ export class LanguageService {
     }
   }
 
+  public setLanguage(languageId: string): void {
+    this.selectLanguage(languageId);
+  }
+
   public selectLesson(lesson: Lesson): void {
     this.selectedLesson.set(lesson);
     this.activeExerciseIndex.set(0);

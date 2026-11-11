@@ -59,7 +59,7 @@ export class AudioVisualizerComponent implements OnInit, OnChanges, OnDestroy {
   canvasRef!: ElementRef<HTMLCanvasElement>;
 
   @Input() isActive = false;
-  @Input() accentColor = '#6366f1';
+  @Input() accentColor = '#ffd21e';
 
   public themeService = inject(ThemeService);
   public visualizerMode: 'waveform' | 'spectrum' = 'spectrum';
@@ -184,9 +184,9 @@ export class AudioVisualizerComponent implements OnInit, OnChanges, OnDestroy {
             const y = height - barHeight;
 
             const grad = ctx.createLinearGradient(0, height, 0, y);
-            grad.addColorStop(0, '#6366f1');
-            grad.addColorStop(0.6, '#06b6d4');
-            grad.addColorStop(1, '#10b981');
+            grad.addColorStop(0, '#ffd21e');
+            grad.addColorStop(0.6, '#f5b800');
+            grad.addColorStop(1, '#fb923c');
             ctx.fillStyle = grad;
 
             // Rounded bars
@@ -201,11 +201,11 @@ export class AudioVisualizerComponent implements OnInit, OnChanges, OnDestroy {
 
           ctx.lineWidth = 2.5;
           const gradient = ctx.createLinearGradient(0, 0, width, 0);
-          gradient.addColorStop(0, '#6366f1');
-          gradient.addColorStop(0.5, '#06b6d4');
-          gradient.addColorStop(1, '#10b981');
+          gradient.addColorStop(0, '#ffd21e');
+          gradient.addColorStop(0.5, '#f5b800');
+          gradient.addColorStop(1, '#fb923c');
           ctx.strokeStyle = gradient;
-          ctx.shadowColor = '#06b6d4';
+          ctx.shadowColor = '#f5b800';
           ctx.shadowBlur = 12;
 
           ctx.beginPath();

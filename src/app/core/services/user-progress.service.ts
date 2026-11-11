@@ -134,5 +134,14 @@ export class UserProgressService {
     }
     return days;
   }
+
+  public reset(): void {
+    this.xp.set(0);
+    this.streak.set(0);
+    this.gems.set(0);
+    try {
+      localStorage.removeItem(this.STORAGE_KEY);
+    } catch { /* ignored */ }
+  }
 }
 

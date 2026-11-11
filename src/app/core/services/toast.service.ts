@@ -26,5 +26,9 @@ export class ToastService {
   dismiss(id: string) {
     this.toasts.update(current => current.filter(t => t.id !== id));
   }
+
+  remove(id: string) {
+    this.dismiss(id);
+  }
 }
 

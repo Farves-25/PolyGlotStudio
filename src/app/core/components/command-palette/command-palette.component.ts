@@ -10,7 +10,7 @@ interface CommandItem {
   id: string;
   title: string;
   subtitle: string;
-  category: 'Navigation' | 'Languages' | 'Quick Actions';
+  category: 'Navigation' | 'Languages' | 'Quick Actions' | 'Portal';
   icon: string;
   action: () => void;
 }
@@ -99,6 +99,14 @@ export class CommandPaletteComponent {
       category: 'Navigation',
       icon: '📊',
       action: () => this.router.navigate(['/dashboard'])
+    },
+    {
+      id: 'nav-phrasebook',
+      title: 'Travel Phrasebook (Loecsen)',
+      subtitle: 'Browse 420+ practical phrases across 14 travel situations with audio',
+      category: 'Navigation',
+      icon: '📖',
+      action: () => this.router.navigate(['/learn', this.langService.selectedLanguage().id])
     },
     {
       id: 'nav-curriculum',
@@ -231,6 +239,22 @@ export class CommandPaletteComponent {
         this.langService.selectLanguage('ta');
         this.toast.show('Switched target language to Tamil (தமிழ்)', 'success');
       }
+    },
+    {
+      id: 'flow-welcome',
+      title: 'Visit Home / Welcome Page',
+      subtitle: 'View product overview, language showcase, and linguistics pillars',
+      category: 'Portal',
+      icon: '🏠',
+      action: () => this.router.navigate(['/welcome'])
+    },
+    {
+      id: 'flow-onboarding',
+      title: 'Restart Onboarding Wizard',
+      subtitle: 'Re-calibrate your purpose, daily goal cadence, and starting level',
+      category: 'Portal',
+      icon: '🚀',
+      action: () => this.router.navigate(['/onboarding'])
     }
   ];
 

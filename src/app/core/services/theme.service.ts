@@ -4,7 +4,7 @@ export type AppTheme = 'dark' | 'light';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  public theme = signal<AppTheme>('dark');
+  public theme = signal<AppTheme>('light');
 
   constructor() {
     this.initTheme();
@@ -13,8 +13,8 @@ export class ThemeService {
   private initTheme(): void {
     if (typeof window === 'undefined') return;
     const stored = localStorage.getItem('POLYGLOT_THEME') as AppTheme | null;
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initial: AppTheme = stored || (prefersDark ? 'dark' : 'light');
+    // The sunlit light theme is the signature look; only switch to dark when explicitly chosen.
+    const initial: AppTheme = stored === 'dark' ? 'dark' : 'light';
     this.setTheme(initial);
   }
 
@@ -22,13 +22,19 @@ export class ThemeService {
     this.theme.set(newTheme);
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
+      const body = document.body;
       if (newTheme === 'dark') {
         root.classList.add('dark');
         root.classList.remove('light');
+        body?.classList.add('dark');
+        body?.classList.remove('light');
       } else {
         root.classList.remove('dark');
         root.classList.add('light');
+        body?.classList.remove('dark');
+        body?.classList.add('light');
       }
+      root.style.colorScheme = newTheme;
       localStorage.setItem('POLYGLOT_THEME', newTheme);
     }
   }
@@ -38,4 +44,3 @@ export class ThemeService {
     this.setTheme(next);
   }
 }
-

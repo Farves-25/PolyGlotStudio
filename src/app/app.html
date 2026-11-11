@@ -1,35 +1,34 @@
-<div class="min-h-screen bg-slate-100/70 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex selection:bg-indigo-500/20 selection:text-indigo-700 dark:selection:text-indigo-200 transition-colors">
-  
-  <!-- LEFT SIDEBAR NAVIGATION -->
-  <app-sidebar class="hidden lg:flex"></app-sidebar>
+<div class="min-h-screen transition-colors flex bg-[#FFFBF0] dark:bg-[#0C0A05] text-stone-900 dark:text-stone-100 selection:bg-sun-300 selection:text-stone-950">
+
+  <!-- LEFT SIDEBAR NAVIGATION (Only in Studio View) -->
+  <app-sidebar *ngIf="isStudioView()" class="hidden lg:flex"></app-sidebar>
 
   <!-- MAIN APPLICATION SHELL -->
-  <div class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-    
-    <!-- TOP HEADER -->
+  <div class="flex-1 flex flex-col min-w-0" [ngClass]="isStudioView() ? 'h-screen overflow-y-auto' : 'min-h-screen'">
+
+    <!-- TOP HEADER (Only in Studio View) -->
     <app-header
+      *ngIf="isStudioView()"
       (onOpenSpotlight)="openSpotlight()"
       (onOpenSupabase)="openSupabase()"
     ></app-header>
 
-    <!-- ACTIVE ROUTE PAGE OUTLET -->
-    <main class="flex-1 p-4 sm:p-6 lg:p-8">
+    <!-- ACTIVE ROUTE PAGE OUTLET (Single, permanent outlet) -->
+    <main [ngClass]="isStudioView() ? 'flex-1 p-4 sm:p-6 lg:p-8' : 'w-full'">
       <router-outlet></router-outlet>
     </main>
 
-    <!-- STUDIO FOOTER -->
-    <footer class="border-t border-slate-200 dark:border-zinc-800/80 py-5 px-6 text-center text-xs text-slate-500 dark:text-zinc-500 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/60 dark:bg-zinc-950/60 backdrop-blur-sm transition-colors">
-      <div>
-        PolyglotStudio • Advanced Multi-Language Acquisition Operating System
+    <!-- STUDIO FOOTER (Only in Studio View) -->
+    <footer *ngIf="isStudioView()" class="border-t border-stone-900/10 dark:border-sun-300/10 py-5 px-6 text-center text-xs text-stone-500 dark:text-stone-400 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/60 dark:bg-white/[0.02] transition-colors">
+      <div class="flex items-center gap-2">
+        <span class="grid h-6 w-6 place-items-center rounded-lg bg-sun-300 text-[11px] dark:bg-sun-400/20">☀️</span>
+        <span>PolyglotStudio • Advanced Multi-Language Acquisition Operating System</span>
       </div>
-      <div class="font-mono text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-3">
-        <span>Angular 19+ Signals</span>
-        <span>•</span>
-        <span>Web Audio Analyser</span>
-        <span>•</span>
-        <span>SuperMemo SM-2</span>
-        <span>•</span>
-        <span>Supabase Postgres</span>
+      <div class="font-mono text-[10px] text-stone-500 dark:text-stone-400 flex flex-wrap items-center justify-center gap-3">
+        <span class="rounded-md border border-stone-900/10 bg-white px-2 py-0.5 dark:border-sun-300/10 dark:bg-white/5">Angular 22 Signals</span>
+        <span class="rounded-md border border-stone-900/10 bg-white px-2 py-0.5 dark:border-sun-300/10 dark:bg-white/5">Web Audio Analyser</span>
+        <span class="rounded-md border border-stone-900/10 bg-white px-2 py-0.5 dark:border-sun-300/10 dark:bg-white/5">SuperMemo SM-2</span>
+        <span class="rounded-md border border-stone-900/10 bg-white px-2 py-0.5 dark:border-sun-300/10 dark:bg-white/5">Supabase Postgres</span>
       </div>
     </footer>
   </div>
@@ -45,32 +44,40 @@
     *ngIf="showSupabaseModal()"
     (close)="closeSupabase()"
   ></app-supabase-config-modal>
+</div>
 
-  <!-- GLOBAL TOAST NOTIFICATION DRAWER -->
-  <div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none">
-    <div
-      *ngFor="let toast of toastService.toasts()"
-      class="pointer-events-auto p-4 rounded-2xl border shadow-2xl backdrop-blur-xl flex items-center justify-between gap-3 animate-bounce-subtle"
-      [ngClass]="{
-        'bg-emerald-950/90 border-emerald-500/40 text-emerald-200': toast.type === 'success',
-        'bg-rose-950/90 border-rose-500/40 text-rose-200': toast.type === 'error',
-        'bg-amber-950/90 border-amber-500/40 text-amber-200': toast.type === 'warning',
-        'bg-slate-900/90 border-indigo-500/40 text-indigo-200': toast.type === 'info'
-      }"
-    >
-      <div class="flex items-center gap-2.5">
-        <span class="text-base">
-          {{ toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : toast.type === 'warning' ? '⚠️' : 'ℹ️' }}
-        </span>
-        <span class="text-xs font-medium leading-relaxed">{{ toast.message }}</span>
-      </div>
-      <button
-        (click)="toastService.dismiss(toast.id)"
-        class="text-xs opacity-60 hover:opacity-100 px-1 py-0.5"
+<!-- GLOBAL TOAST NOTIFICATION DRAWER -->
+<div class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none">
+  <div
+    *ngFor="let toast of toastService.toasts()"
+    class="pointer-events-auto p-4 rounded-2xl border-2 shadow-[6px_6px_0_0_#1c1917] backdrop-blur-xl flex items-center justify-between gap-3 animate-toast-in bg-white/95 text-stone-900 dark:bg-[#1D1709]/95 dark:text-stone-100 dark:shadow-[6px_6px_0_0_rgba(255,226,77,0.75)]"
+    [ngClass]="{
+      'border-emerald-400 dark:border-emerald-400/60': toast.type === 'success',
+      'border-rose-400 dark:border-rose-400/60': toast.type === 'error',
+      'border-sun-400 dark:border-sun-300/70': toast.type === 'warning',
+      'border-sun-600 dark:border-sun-300/50': toast.type === 'info'
+    }"
+  >
+    <div class="flex items-center gap-3">
+      <span
+        class="grid h-8 w-8 place-items-center rounded-xl text-sm border-2 border-stone-950/80 dark:border-sun-200/50"
+        [ngClass]="{
+          'bg-emerald-300': toast.type === 'success',
+          'bg-rose-300': toast.type === 'error',
+          'bg-sun-300': toast.type === 'warning',
+          'bg-sun-200': toast.type === 'info'
+        }"
       >
-        ✕
-      </button>
+        {{ toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : toast.type === 'warning' ? '⚠️' : 'ℹ️' }}
+      </span>
+      <span class="text-xs font-bold">{{ toast.message }}</span>
     </div>
+    <button
+      (click)="toastService.remove(toast.id)"
+      class="text-xs opacity-60 hover:opacity-100 transition-opacity p-1"
+      aria-label="Dismiss notification"
+    >
+      ✕
+    </button>
   </div>
-
 </div>

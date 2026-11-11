@@ -33,11 +33,14 @@ import { LucideAngularModule } from 'lucide-angular';
           <div class="flex items-center gap-2">
             <button
               (click)="toggleSlowAudio()"
-              class="px-2.5 py-1 text-xs font-mono rounded-lg transition-colors border"
-              [ngClass]="ttsService.playbackRate() < 1 ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-600/30 dark:text-indigo-300 dark:border-indigo-500/40' : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700'"
-              title="Toggle slow playback for phonetic clarity"
+              class="px-2.5 py-1 text-xs font-mono rounded-lg transition-all border active:scale-95"
+              [ngClass]="ttsService.isSlow() || ttsService.playbackRate() < 1
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-2 ring-indigo-400/50 font-bold scale-105'
+                : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700'"
+              [attr.aria-pressed]="ttsService.isSlow()"
+              title="Toggle slow playback for phonetic clarity (0.75x)"
             >
-              {{ ttsService.playbackRate() < 1 ? '0.75x Slow' : '1.0x Normal' }}
+              {{ (ttsService.isSlow() || ttsService.playbackRate() < 1) ? '🐢 0.75x Slow' : '1.0x Normal' }}
             </button>
 
             <button
@@ -239,11 +242,7 @@ export class SpeechVerifierComponent {
   }
 
   toggleSlowAudio() {
-    if (this.ttsService.playbackRate() < 1) {
-      this.ttsService.setRate(1.0);
-    } else {
-      this.ttsService.setRate(0.75);
-    }
+    this.ttsService.toggleSlow();
   }
 
   testSimulated(scoreTier: number) {
