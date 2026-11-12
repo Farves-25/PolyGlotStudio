@@ -19,15 +19,39 @@ import { FormsModule } from '@angular/forms';
       <nav class="sticky top-0 z-30 bg-white/95 dark:bg-[#0C0A05]/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3 text-sm">
           <div class="flex items-center gap-2 min-w-0">
-            <a [routerLink]="['/learn', langId()]" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1 shrink-0 font-medium">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-              {{ lang()?.name }}
+            <!-- Back to All Topics -->
+            <a [routerLink]="['/learn', langId()]" class="px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors flex items-center gap-1 shrink-0 text-xs font-bold" title="Back to All Topics">
+              <span>←</span>
+              <span>All Topics</span>
             </a>
             <span class="text-slate-300 dark:text-slate-700">›</span>
-            <span class="font-bold text-slate-800 dark:text-slate-200 truncate">{{ categoryInfo()?.name }}</span>
+            <span class="font-extrabold text-slate-800 dark:text-slate-200 truncate text-xs sm:text-sm flex items-center gap-1.5">
+              <span>{{ categoryInfo()?.icon }}</span>
+              <span>{{ categoryInfo()?.name }}</span>
+            </span>
           </div>
 
           <div class="flex items-center gap-2 shrink-0">
+            <!-- Prev/Next quick links in header -->
+            <div class="hidden md:flex items-center gap-1">
+              <a
+                *ngIf="prevCategory()"
+                [routerLink]="['/learn', langId(), prevCategory()?.id]"
+                class="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-400"
+                [title]="'Previous: ' + prevCategory()?.name"
+              >
+                ‹ Prev
+              </a>
+              <a
+                *ngIf="nextCategory()"
+                [routerLink]="['/learn', langId(), nextCategory()?.id]"
+                class="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400"
+                [title]="'Next: ' + nextCategory()?.name"
+              >
+                Next ›
+              </a>
+            </div>
+
             <!-- Mode Switcher Pill -->
             <div class="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold">
               <button
@@ -37,7 +61,7 @@ import { FormsModule } from '@angular/forms';
                   ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
               >
-                <span>🎬</span> Comic Story
+                <span>🎬</span> <span class="hidden sm:inline">Comic Story</span>
               </button>
               <button
                 (click)="viewMode.set('list')"
@@ -46,7 +70,7 @@ import { FormsModule } from '@angular/forms';
                   ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
               >
-                <span>📋</span> Table
+                <span>📋</span> <span class="hidden sm:inline">Table</span>
               </button>
             </div>
 
@@ -366,21 +390,82 @@ import { FormsModule } from '@angular/forms';
           </div>
         </div>
 
-        <!-- BOTTOM ACTION BAR -->
-        <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md">
-          <div>
-            <h3 class="font-extrabold text-base">Ready to test your memory?</h3>
-            <p class="text-xs text-indigo-100 mt-0.5">
-              Practice with interactive audio matching, word scrambles, and flashcards.
-            </p>
+        <!-- TOPIC NAVIGATION & PROGRESSION BAR -->
+        <div class="mt-8 space-y-4">
+          <!-- Quiz Prompt Banner -->
+          <div class="p-5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-indigo-200 font-bold">
+                <span>⚡</span> Step 2: Reinforce with Quiz
+              </div>
+              <h3 class="font-extrabold text-base mt-0.5">Ready to test what you've learned?</h3>
+              <p class="text-xs text-indigo-100 mt-0.5">
+                Practice with audio match, word unscramble, and spaced repetition flashcards.
+              </p>
+            </div>
+            <a
+              [routerLink]="['/quiz', langId(), categoryId()]"
+              class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white text-indigo-700 hover:bg-slate-100 font-extrabold text-xs shadow-sm transition-all transform active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
+            >
+              <span>Start Topic Quiz</span>
+              <span>→</span>
+            </a>
           </div>
-          <a
-            [routerLink]="['/quiz', langId(), categoryId()]"
-            class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white text-indigo-700 hover:bg-slate-100 font-bold text-xs shadow-sm transition-all transform active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
-          >
-            <span>⚡ Start Super Memory Quiz</span>
-            <span>→</span>
-          </a>
+
+          <!-- Bottom Topic Stepper (Back / Next) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Left: Previous Topic -->
+            <a
+              *ngIf="prevCategory(); else allTopicsBtn"
+              [routerLink]="['/learn', langId(), prevCategory()?.id]"
+              class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all flex items-center gap-3.5 group shadow-xs"
+            >
+              <span class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 group-hover:-translate-x-0.5 transition-transform font-bold text-sm">
+                ←
+              </span>
+              <div class="min-w-0">
+                <div class="text-[10px] uppercase font-mono font-bold text-slate-400">Previous Topic</div>
+                <div class="font-extrabold text-xs text-slate-900 dark:text-white truncate">
+                  {{ prevCategory()?.icon }} {{ prevCategory()?.name }}
+                </div>
+              </div>
+            </a>
+            <ng-template #allTopicsBtn>
+              <a
+                [routerLink]="['/learn', langId()]"
+                class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 hover:bg-white dark:hover:bg-slate-900 transition-colors flex items-center gap-3 text-xs font-bold text-slate-600 dark:text-slate-300 shadow-xs"
+              >
+                <span class="text-base">←</span>
+                <span>Return to All 14 Topics</span>
+              </a>
+            </ng-template>
+
+            <!-- Right: Next Topic -->
+            <a
+              *ngIf="nextCategory(); else finishTopic"
+              [routerLink]="['/learn', langId(), nextCategory()?.id]"
+              class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all flex items-center justify-between group shadow-xs"
+            >
+              <div class="min-w-0">
+                <div class="text-[10px] uppercase font-mono font-bold text-indigo-600 dark:text-indigo-400">Next Topic</div>
+                <div class="font-extrabold text-xs text-slate-900 dark:text-white truncate">
+                  {{ nextCategory()?.icon }} {{ nextCategory()?.name }}
+                </div>
+              </div>
+              <span class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:translate-x-0.5 transition-transform font-bold text-sm">
+                →
+              </span>
+            </a>
+            <ng-template #finishTopic>
+              <a
+                [routerLink]="['/learn', langId()]"
+                class="p-4 rounded-2xl border-2 border-emerald-400/50 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100 transition-colors flex items-center justify-between text-xs font-extrabold text-emerald-800 dark:text-emerald-300"
+              >
+                <span>🎉 Last topic reached! Review all categories</span>
+                <span>→</span>
+              </a>
+            </ng-template>
+          </div>
         </div>
 
       </div>
@@ -413,6 +498,20 @@ export class PhraseListComponent implements OnInit, OnDestroy {
 
   public activePhrase = computed(() => this.phrases()[this.activeIndex()] || this.phrases()[0]);
   public isPlayingActive = computed(() => this.playingId() === this.activePhrase()?.id);
+
+  public prevCategory = computed(() => {
+    const cats = PHRASE_CATEGORIES;
+    const idx = cats.findIndex(c => c.id === this.categoryId());
+    if (idx <= 0) return null;
+    return cats[idx - 1];
+  });
+
+  public nextCategory = computed(() => {
+    const cats = PHRASE_CATEGORIES;
+    const idx = cats.findIndex(c => c.id === this.categoryId());
+    if (idx < 0 || idx >= cats.length - 1) return null;
+    return cats[idx + 1];
+  });
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {

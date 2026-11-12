@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { LanguageService } from '../../core/services/language.service';
 import { AiRoleplayComponent } from '../lesson-studio/components/ai-roleplay/ai-roleplay.component';
 import { Exercise, DialogueScenario } from '../../core/models/exercise.model';
@@ -20,10 +21,31 @@ interface HubScenario {
 @Component({
   selector: 'app-roleplay-hub',
   standalone: true,
-  imports: [CommonModule, AiRoleplayComponent],
+  imports: [CommonModule, RouterModule, AiRoleplayComponent],
   template: `
     <div class="space-y-8 animate-fadeIn max-w-7xl mx-auto">
       
+      <!-- Top Navigation & Breadcrumbs -->
+      <div class="flex items-center justify-between text-xs">
+        <a
+          routerLink="/grammar"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+        >
+          <span>←</span>
+          <span>Back to Grammar</span>
+        </a>
+        <div class="flex items-center gap-2">
+          <span class="text-slate-400 dark:text-zinc-500 font-mono text-[11px]">Next Module:</span>
+          <a
+            routerLink="/leaderboard"
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 font-semibold transition-colors"
+          >
+            <span>Diamond League</span>
+            <span>→</span>
+          </a>
+        </div>
+      </div>
+
       <!-- Header -->
       <div class="surface-card p-6 md:p-8 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -101,6 +123,30 @@ interface HubScenario {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Module Navigation Progression Stepper -->
+      <div class="surface-card p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <a
+          routerLink="/grammar"
+          class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-700/80 text-xs font-semibold text-slate-700 dark:text-zinc-200 flex items-center justify-center gap-2 transition-all shadow-sm"
+        >
+          <span>←</span>
+          <span>Previous: Grammar Matrix</span>
+        </a>
+
+        <div class="text-center hidden md:block">
+          <span class="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Pedagogical Sequence</span>
+          <span class="text-xs font-medium text-slate-600 dark:text-zinc-300">Step 6 of 6 • Conversational Capstone</span>
+        </div>
+
+        <a
+          routerLink="/leaderboard"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all hover:translate-x-0.5"
+        >
+          <span>Next: Diamond League</span>
+          <span>→</span>
+        </a>
       </div>
     </div>
   `

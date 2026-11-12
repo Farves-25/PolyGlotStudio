@@ -5,6 +5,7 @@ import { PhraseService } from '../../core/services/phrase.service';
 import { SUPPORTED_LANGUAGES } from '../../core/services/language.service';
 import { TextToSpeechService } from '../../core/services/text-to-speech.service';
 import { AudioSfxService } from '../../core/services/audio-sfx.service';
+import { AuthService } from '../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
 
@@ -16,24 +17,64 @@ import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.dir
     <div class="min-h-screen bg-[#FFFBF0] dark:bg-[#0C0A05] text-stone-900 dark:text-stone-100 transition-colors">
 
       <!-- NAV BAR -->
-      <nav class="sticky top-0 z-30 bg-[#FFFBF0]/85 dark:bg-[#0C0A05]/85 backdrop-blur-xl border-b border-stone-900/10 dark:border-sun-300/10">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
-          <a routerLink="/welcome" class="group flex items-center gap-2 text-xs font-bold text-stone-600 dark:text-stone-400 hover:text-stone-950 dark:hover:text-white transition-colors">
-            <span class="grid h-8 w-8 place-items-center rounded-xl border-2 border-stone-950 bg-sun-400 text-sm shadow-[2px_2px_0_0_#1c1917] dark:border-sun-200 dark:shadow-[2px_2px_0_0_rgba(255,226,77,0.8)] transition-transform group-hover:-rotate-6">☀️</span>
-            <span>PolyglotStudio</span>
-          </a>
-          <span class="text-stone-300 dark:text-stone-700">/</span>
-          <span class="text-xs font-extrabold text-stone-900 dark:text-stone-100 flex items-center gap-1.5 rounded-full border border-stone-900/10 bg-white px-2.5 py-1 dark:border-sun-300/15 dark:bg-white/5">
-            <span class="text-base">{{ lang()?.flag_emoji }}</span>
-            {{ lang()?.name }}
-          </span>
-          <div class="ml-auto">
+      <nav class="sticky top-0 z-30 bg-[#FFFBF0]/90 dark:bg-[#0C0A05]/90 backdrop-blur-xl border-b border-stone-900/10 dark:border-sun-300/10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+          
+          <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+            <!-- Back Button -->
+            <a
+              [routerLink]="auth.isAuthenticated() ? '/dashboard' : '/welcome'"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-stone-900/10 dark:border-sun-300/10 bg-white dark:bg-white/5 hover:bg-sun-200 dark:hover:bg-sun-400/15 text-xs font-bold transition-all text-stone-700 dark:text-stone-300 shrink-0"
+            >
+              <span>←</span>
+              <span>{{ auth.isAuthenticated() ? 'Dashboard' : 'Home' }}</span>
+            </a>
+
+            <span class="text-stone-300 dark:text-stone-700 hidden sm:inline">/</span>
+
+            <a routerLink="/welcome" class="hidden sm:flex items-center gap-2 text-xs font-bold text-stone-600 dark:text-stone-400 hover:text-stone-950 dark:hover:text-white transition-colors">
+              <span class="grid h-7 w-7 place-items-center rounded-lg border border-stone-950 bg-sun-400 text-xs shadow-xs">☀️</span>
+              <span class="hidden md:inline">PolyglotStudio</span>
+            </a>
+
+            <span class="text-stone-300 dark:text-stone-700">/</span>
+
+            <!-- Active Language Badge + Switcher -->
+            <div class="relative">
+              <button
+                type="button"
+                (click)="langMenuOpen = !langMenuOpen"
+                class="text-xs font-extrabold text-stone-900 dark:text-stone-100 flex items-center gap-1.5 rounded-full border border-stone-900/10 bg-white px-3 py-1 dark:border-sun-300/15 dark:bg-white/5 hover:bg-sun-100 dark:hover:bg-sun-400/10 transition-colors shadow-xs"
+              >
+                <span class="text-base select-none">{{ lang()?.flag_emoji }}</span>
+                <span>{{ lang()?.name }}</span>
+                <span class="text-[9px] text-stone-400">▼</span>
+              </button>
+
+              <div *ngIf="langMenuOpen" class="absolute top-11 left-0 w-48 rounded-2xl border-2 border-stone-950/15 bg-white dark:bg-[#1A150A] p-2 shadow-2xl z-50 animate-fadeIn">
+                <div class="text-[9px] font-mono uppercase text-stone-400 px-2 py-1 font-bold">Switch Language</div>
+                <a
+                  *ngFor="let l of allLanguages"
+                  [routerLink]="['/learn', l.id]"
+                  (click)="langMenuOpen = false"
+                  class="flex items-center justify-between p-2 rounded-xl text-xs font-bold hover:bg-sun-100 dark:hover:bg-sun-400/10 transition-colors"
+                  [class.bg-sun-200]="l.id === langId()"
+                >
+                  <span class="flex items-center gap-2"><span>{{ l.flag_emoji }}</span> {{ l.name }}</span>
+                  <span class="text-[10px] text-stone-400 font-mono">420</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Smart Review Button -->
+          <div class="flex items-center gap-2 shrink-0">
             <a
               [routerLink]="['/quiz', langId(), 'essentials']"
               (click)="sfx.playLevelUp()"
-              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-stone-950 bg-sun-400 text-stone-950 text-xs font-extrabold shadow-[3px_3px_0_0_#1c1917] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_0_#1c1917] dark:border-sun-200 dark:shadow-[3px_3px_0_0_rgba(255,226,77,0.85)]"
+              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border-2 border-stone-950 bg-sun-400 text-stone-950 text-xs font-extrabold shadow-[2px_2px_0_0_#1c1917] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none dark:border-sun-200 dark:shadow-[2px_2px_0_0_rgba(255,226,77,0.85)]"
             >
-              <span>⚡</span> Smart review
+              <span>⚡</span> <span>Smart review</span>
             </a>
           </div>
         </div>
@@ -154,6 +195,29 @@ import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.dir
             </div>
           </div>
         </div>
+
+        <!-- NEXT STEP BANNER -->
+        <div class="mt-12 p-6 rounded-3xl border-2 border-stone-950 bg-gradient-to-r from-sun-300 via-amber-300 to-orange-300 text-stone-950 flex flex-col sm:flex-row items-center justify-between gap-5 shadow-[6px_6px_0_0_#1c1917] dark:border-sun-200 dark:shadow-[6px_6px_0_0_rgba(255,226,77,0.8)]">
+          <div class="space-y-1 text-center sm:text-left">
+            <div class="inline-flex items-center gap-1.5 text-[10px] font-mono font-extrabold uppercase tracking-widest text-stone-800">
+              <span>🚀</span> Ready for the next stage?
+            </div>
+            <h3 class="font-display font-extrabold text-xl">Test your accent in the Interactive Studio</h3>
+            <p class="text-xs font-semibold text-stone-800/80 max-w-lg">
+              Use your microphone to speak with native voice frequency analysis, practice spaced repetition flashcards, and master grammar constituents.
+            </p>
+          </div>
+          <div class="flex items-center gap-2.5 w-full sm:w-auto">
+            <a
+              [routerLink]="auth.isAuthenticated() ? '/studio' : '/onboarding'"
+              class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-stone-950 hover:bg-stone-800 text-sun-300 font-extrabold text-xs shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span>Launch Studio Exercises</span>
+              <span>→</span>
+            </a>
+          </div>
+        </div>
+
       </div>
     </div>
   `,
@@ -164,8 +228,11 @@ export class PhrasebookComponent implements OnInit {
   private phraseService = inject(PhraseService);
   private tts = inject(TextToSpeechService);
   public sfx = inject(AudioSfxService);
+  public auth = inject(AuthService);
 
   public langId = signal<string>('es');
+  public allLanguages = SUPPORTED_LANGUAGES;
+  public langMenuOpen = false;
   public lang = computed(() => SUPPORTED_LANGUAGES.find(l => l.id === this.langId()) || SUPPORTED_LANGUAGES[0]);
   public categories = computed(() => this.phraseService.getCategoriesForLanguage(this.langId()));
   public totalPhrases = computed(() => this.phraseService.getTotalPhraseCount(this.langId()));

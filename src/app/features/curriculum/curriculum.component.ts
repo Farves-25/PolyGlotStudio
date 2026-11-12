@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { LanguageService } from '../../core/services/language.service';
 import { Lesson } from '../../core/models/language.model';
 import { RtlDirectionDirective } from '../../shared/directives/rtl-direction.directive';
@@ -23,7 +23,7 @@ interface CurriculumUnit {
 @Component({
   selector: 'app-curriculum',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="space-y-8 animate-fadeIn max-w-5xl mx-auto">
       
@@ -44,11 +44,21 @@ interface CurriculumUnit {
           </p>
         </div>
 
-        <div class="flex items-center gap-3">
-          <div class="bg-slate-100 dark:bg-zinc-900 p-3 rounded-xl border border-slate-200 dark:border-zinc-800 text-center">
-            <span class="block text-[10px] font-mono text-slate-500 dark:text-zinc-400 uppercase">Progress</span>
-            <span class="text-base font-extrabold text-emerald-600 dark:text-emerald-400">42% Mastered</span>
-          </div>
+        <div class="flex items-center gap-2.5">
+          <a
+            routerLink="/dashboard"
+            class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 font-bold text-xs hover:bg-slate-100 transition-colors flex items-center gap-1.5"
+          >
+            <span>←</span>
+            <span>Dashboard</span>
+          </a>
+          <a
+            routerLink="/studio"
+            class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition-all active:scale-95 flex items-center gap-1.5"
+          >
+            <span>Enter Studio</span>
+            <span>→</span>
+          </a>
         </div>
       </div>
 
@@ -125,6 +135,28 @@ interface CurriculumUnit {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Bottom Module Progression Bar -->
+      <div class="surface-card p-6 rounded-2xl border border-slate-200/80 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h4 class="text-[10px] font-mono uppercase font-bold text-indigo-600 dark:text-indigo-400">Step 2 of Your Journey</h4>
+          <div class="text-sm font-extrabold text-slate-900 dark:text-white mt-0.5">Ready to practice acoustic verifications?</div>
+        </div>
+        <div class="flex items-center gap-2.5 w-full sm:w-auto">
+          <a
+            routerLink="/dashboard"
+            class="px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs font-bold hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
+          >
+            ← Back to Dashboard
+          </a>
+          <a
+            routerLink="/studio"
+            class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition-all active:scale-95"
+          >
+            Open Interactive Studio →
+          </a>
         </div>
       </div>
     </div>

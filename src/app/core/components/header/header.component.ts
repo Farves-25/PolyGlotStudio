@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { LanguageService } from '../../services/language.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { TextToSpeechService } from '../../services/text-to-speech.service';
@@ -73,6 +74,22 @@ import { AuthService } from '../../services/auth.service';
           </div>
         </div>
 
+        <!-- Breadcrumb / Back button when on subpage -->
+        <div *ngIf="getPageTitle()" class="flex items-center gap-2 border-l border-stone-900/10 dark:border-sun-300/15 pl-2 sm:pl-3">
+          <a
+            routerLink="/dashboard"
+            class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white hover:bg-sun-200 dark:bg-white/5 dark:hover:bg-sun-400/15 border border-stone-900/10 dark:border-sun-300/10 text-stone-700 dark:text-stone-300 transition-all text-xs font-bold shadow-2xs"
+            title="Back to Dashboard"
+          >
+            <span>←</span>
+            <span class="hidden sm:inline">Dashboard</span>
+          </a>
+          <span class="text-stone-300 dark:text-stone-700 hidden sm:inline">/</span>
+          <span class="font-extrabold text-xs text-stone-900 dark:text-stone-100 truncate max-w-[130px] sm:max-w-none">
+            {{ getPageTitle() }}
+          </span>
+        </div>
+
         <!-- Spotlight -->
         <button
           (click)="onOpenSpotlight.emit()"
@@ -90,6 +107,17 @@ import { AuthService } from '../../services/auth.service';
 
       <!-- Right: stats + controls -->
       <div class="flex items-center gap-1.5 sm:gap-2.5">
+
+        <!-- Next Module quick-jump (desktop) -->
+        <a
+          *ngIf="getNextModule()"
+          [routerLink]="getNextModule()?.link"
+          class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all transform active:scale-95"
+          [title]="'Next step: ' + getNextModule()?.label"
+        >
+          <span>Next: {{ getNextModule()?.label }}</span>
+          <span>→</span>
+        </a>
 
         <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-sun-200 border border-sun-600/25 text-sun-900 dark:bg-sun-400/10 dark:border-sun-300/20 dark:text-sun-300 text-xs font-mono font-extrabold" title="Daily streak">
           <span class="animate-flame">🔥</span>
@@ -160,6 +188,7 @@ export class HeaderComponent {
   @Output() onOpenSpotlight = new EventEmitter<void>();
   @Output() onOpenSupabase = new EventEmitter<void>();
 
+  private router = inject(Router);
   public langService = inject(LanguageService);
   public supabase = inject(SupabaseService);
   public tts = inject(TextToSpeechService);
@@ -171,9 +200,11 @@ export class HeaderComponent {
 
   public dropdownOpen = false;
   public mobileMenuOpen = false;
+  public currentUrl = signal<string>('');
 
   public mobileNav = [
     { icon: '📊', label: 'Dashboard', link: '/dashboard' },
+    { icon: '📖', label: 'Phrasebook', link: '/learn/es' },
     { icon: '🗺️', label: 'Curriculum', link: '/curriculum' },
     { icon: '🎙️', label: 'Studio', link: '/studio' },
     { icon: '📚', label: 'Vocabulary', link: '/vocabulary' },
@@ -184,6 +215,48 @@ export class HeaderComponent {
     { icon: '⚙️', label: 'Settings', link: '/settings' },
     { icon: '☀️', label: 'Home', link: '/welcome' },
   ];
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.currentUrl.set(window.location.pathname);
+    }
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe((e: any) => {
+      this.currentUrl.set(e.urlAfterRedirects || e.url);
+    });
+  }
+
+  public getPageTitle(): string {
+    const url = this.currentUrl().split('?')[0];
+    switch (url) {
+      case '/curriculum': return 'Curriculum Roadmap';
+      case '/studio': return 'Interactive Studio';
+      case '/vocabulary': return 'Vocabulary Vault';
+      case '/phonetics': return 'Phonetics & IPA Lab';
+      case '/grammar': return 'Grammar Matrix';
+      case '/roleplay': return 'AI Dialogue Arena';
+      case '/leaderboard': return 'Diamond League';
+      case '/settings': return 'Studio Settings';
+      default: return '';
+    }
+  }
+
+  public getNextModule(): { label: string; link: string } | null {
+    const url = this.currentUrl().split('?')[0];
+    const lang = this.langService.selectedLanguage().id;
+    switch (url) {
+      case '/dashboard': return { label: 'Explore Phrasebook', link: '/learn/' + lang };
+      case '/curriculum': return { label: 'Interactive Studio', link: '/studio' };
+      case '/studio': return { label: 'Vocabulary Vault', link: '/vocabulary' };
+      case '/vocabulary': return { label: 'Phonetics Lab', link: '/phonetics' };
+      case '/phonetics': return { label: 'Grammar Matrix', link: '/grammar' };
+      case '/grammar': return { label: 'AI Dialogue Arena', link: '/roleplay' };
+      case '/roleplay': return { label: 'Diamond League', link: '/leaderboard' };
+      case '/leaderboard': return { label: 'Studio Settings', link: '/settings' };
+      default: return null;
+    }
+  }
 
   selectLanguage(langId: string) {
     this.langService.selectLanguage(langId);

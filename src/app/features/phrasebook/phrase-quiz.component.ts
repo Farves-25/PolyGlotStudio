@@ -26,18 +26,17 @@ interface QuizCard extends Phrase {
       <nav class="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0C0A05]/95 backdrop-blur-sm sticky top-0 z-30">
         <div class="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
           
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 sm:gap-3">
             <a [routerLink]="['/learn', langId(), categoryId()]"
-               class="p-2 rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-               title="Exit Quiz">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+               class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors text-xs font-bold flex items-center gap-1.5"
+               title="Exit Quiz and return to expressions">
+              <span>←</span>
+              <span>Back to {{ categoryInfo()?.name }}</span>
             </a>
 
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="text-base">{{ categoryInfo()?.icon }}</span>
-                <span class="font-extrabold text-sm text-slate-900 dark:text-white">{{ categoryInfo()?.name }}</span>
-              </div>
+            <div class="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+              <span>/</span>
+              <span class="font-extrabold text-slate-700 dark:text-slate-200">{{ lang()?.name }} Quiz</span>
             </div>
           </div>
 
@@ -348,15 +347,35 @@ interface QuizCard extends Phrase {
         <div class="flex flex-col sm:flex-row items-center gap-3 w-full">
           <button
             (click)="restartQuiz()"
-            class="w-full sm:flex-1 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md transition-all transform active:scale-95"
-          >
-            Practice Again
-          </button>
-          <a
-            [routerLink]="['/learn', langId()]"
             class="w-full sm:flex-1 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm shadow-xs transition-colors"
           >
-            Next Topic →
+            ↺ Practice Again
+          </button>
+
+          <a
+            *ngIf="nextCategory(); else allTopicsComplete"
+            [routerLink]="['/learn', langId(), nextCategory()?.id]"
+            class="w-full sm:flex-1 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md transition-all transform active:scale-95 flex items-center justify-center gap-2"
+          >
+            <span>Next Topic: {{ nextCategory()?.name }}</span>
+            <span>→</span>
+          </a>
+          <ng-template #allTopicsComplete>
+            <a
+              [routerLink]="['/learn', langId()]"
+              class="w-full sm:flex-1 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md transition-all transform active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span>View All 14 Topics →</span>
+            </a>
+          </ng-template>
+        </div>
+
+        <div class="mt-4">
+          <a
+            [routerLink]="['/learn', langId(), categoryId()]"
+            class="text-xs font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline"
+          >
+            ← Return to {{ categoryInfo()?.name }} phrase list
           </a>
         </div>
       </div>
@@ -378,6 +397,14 @@ export class PhraseQuizComponent implements OnInit, OnDestroy {
 
   public lang = computed(() => SUPPORTED_LANGUAGES.find(l => l.id === this.langId()) || SUPPORTED_LANGUAGES[0]);
   public categoryInfo = computed(() => PHRASE_CATEGORIES.find(c => c.id === this.categoryId()));
+  public nextCategory = computed(() => {
+    const cats = PHRASE_CATEGORIES;
+    const idx = cats.findIndex(c => c.id === this.categoryId());
+    if (idx >= 0 && idx < cats.length - 1) {
+      return cats[idx + 1];
+    }
+    return null;
+  });
 
   public cards = signal<QuizCard[]>([]);
   public currentIndex = signal<number>(0);
