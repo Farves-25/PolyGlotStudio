@@ -561,6 +561,14 @@ export class PhraseListComponent implements OnInit, OnDestroy {
         )
       );
     }
+
+    // Preload active and upcoming phrase audio in the background for zero-latency playback
+    const list = this.filteredPhrases();
+    const loc = this.lang().locale_code;
+    if (list.length > 0) {
+      this.tts.preload(list[0].native, loc);
+      if (list.length > 1) this.tts.preload(list[1].native, loc);
+    }
   }
 
   onSearch(query: string) {
@@ -571,12 +579,17 @@ export class PhraseListComponent implements OnInit, OnDestroy {
   goToPhrase(index: number) {
     this.activeIndex.set(index);
     this.sfx.playCardFlip();
+    const p = this.phrases()[index];
+    if (p) this.tts.preload(p.native, this.lang().locale_code);
   }
 
   nextPhrase() {
     if (this.activeIndex() < this.phrases().length - 1) {
-      this.activeIndex.update(i => i + 1);
+      const nextIdx = this.activeIndex() + 1;
+      this.activeIndex.set(nextIdx);
       this.sfx.playWhoosh();
+      const nextNext = this.phrases()[nextIdx + 1];
+      if (nextNext) this.tts.preload(nextNext.native, this.lang().locale_code);
     }
   }
 

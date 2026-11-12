@@ -719,3 +719,44 @@ html.dark ::-webkit-scrollbar-thumb:hover,
     transform: none !important;
   }
 }
+
+/* ============================================================
+   VIEW TRANSITIONS & HARDWARE ACCELERATION
+   Smooth native 60fps transitions between screens & routes
+   ============================================================ */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: routeFadeOut;
+}
+
+::view-transition-new(root) {
+  animation-name: routeFadeIn;
+}
+
+@keyframes routeFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.995); }
+}
+
+@keyframes routeFadeIn {
+  from { opacity: 0; transform: scale(0.995); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* GPU acceleration for interactive cards, buttons, and animations */
+.surface-card,
+.tilt-wrap,
+button,
+a {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

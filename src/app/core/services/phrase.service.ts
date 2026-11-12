@@ -269,35 +269,56 @@ export class PhraseService {
 
   public readonly categories = signal<PhraseCategory[]>(PHRASE_CATEGORIES);
 
+  // Fast O(1) indexed lookup caches
+  private readonly categoriesByLangCache = new Map<string, (PhraseCategory & { count: number })[]>();
+  private readonly phrasesByCategoryCache = new Map<string, Phrase[]>();
+  private readonly phrasesByLangCache = new Map<string, Phrase[]>();
+
   getCategoriesForLanguage(langId: string): (PhraseCategory & { count: number })[] {
-    return PHRASE_CATEGORIES.map(cat => ({
+    const cached = this.categoriesByLangCache.get(langId);
+    if (cached) return cached;
+
+    const result = PHRASE_CATEGORIES.map(cat => ({
       ...cat,
       count: this.allPhrases.filter(p => p.langId === langId && p.categoryId === cat.id).length
     })).filter(c => c.count > 0);
+
+    this.categoriesByLangCache.set(langId, result);
+    return result;
   }
 
   getPhrasesForCategory(langId: string, categoryId: string): Phrase[] {
-    return this.allPhrases.filter(p => p.langId === langId && p.categoryId === categoryId);
+    const key = `${langId}:${categoryId}`;
+    const cached = this.phrasesByCategoryCache.get(key);
+    if (cached) return cached;
+
+    const result = this.allPhrases.filter(p => p.langId === langId && p.categoryId === categoryId);
+    this.phrasesByCategoryCache.set(key, result);
+    return result;
   }
 
   getPhrasesForLanguage(langId: string): Phrase[] {
-    return this.allPhrases.filter(p => p.langId === langId);
+    const cached = this.phrasesByLangCache.get(langId);
+    if (cached) return cached;
+
+    const result = this.allPhrases.filter(p => p.langId === langId);
+    this.phrasesByLangCache.set(langId, result);
+    return result;
   }
 
   searchPhrases(langId: string, query: string): Phrase[] {
     const q = query.toLowerCase().trim();
     if (!q) return this.getPhrasesForLanguage(langId);
-    return this.allPhrases.filter(p =>
-      p.langId === langId && (
-        p.native.toLowerCase().includes(q) ||
-        p.translation.toLowerCase().includes(q) ||
-        p.phonetic.toLowerCase().includes(q)
-      )
+    const langPhrases = this.getPhrasesForLanguage(langId);
+    return langPhrases.filter(p =>
+      p.native.toLowerCase().includes(q) ||
+      p.translation.toLowerCase().includes(q) ||
+      p.phonetic.toLowerCase().includes(q)
     );
   }
 
   getTotalPhraseCount(langId: string): number {
-    return this.allPhrases.filter(p => p.langId === langId).length;
+    return this.getPhrasesForLanguage(langId).length;
   }
 }
 

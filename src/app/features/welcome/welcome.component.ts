@@ -828,6 +828,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.heroRaf !== null) cancelAnimationFrame(this.heroRaf);
     if (this.rotateTimer) clearInterval(this.rotateTimer);
     if (this.animationTimer) clearTimeout(this.animationTimer);
     if (this.speakTimer) clearTimeout(this.speakTimer);
@@ -937,11 +938,20 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     this.router.navigate(['/learn', 'es', cat.id]);
   }
 
+  private heroRaf: number | null = null;
+
   onHeroMove(event: MouseEvent): void {
+    if (this.heroRaf !== null) return;
     const el = event.currentTarget as HTMLElement;
-    const rect = el.getBoundingClientRect();
-    el.style.setProperty('--mx', `${event.clientX - rect.left}px`);
-    el.style.setProperty('--my', `${event.clientY - rect.top}px`);
+    const clientX = event.clientX;
+    const clientY = event.clientY;
+
+    this.heroRaf = requestAnimationFrame(() => {
+      this.heroRaf = null;
+      const rect = el.getBoundingClientRect();
+      el.style.setProperty('--mx', `${clientX - rect.left}px`);
+      el.style.setProperty('--my', `${clientY - rect.top}px`);
+    });
   }
 
   private advanceSample(direction: number): void {

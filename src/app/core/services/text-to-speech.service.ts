@@ -20,6 +20,10 @@ export class TextToSpeechService {
   private activeUtterance: SpeechSynthesisUtterance | null = null;
   /** Active HTML5 audio element for streaming fallback */
   private activeAudio: HTMLAudioElement | null = null;
+  /** Persistent pre-warmed HTML5 audio element to prevent DOM churn */
+  private persistentAudio: HTMLAudioElement | null = null;
+  /** In-memory cache for audio stream URLs and endpoints */
+  private streamUrlCache = new Map<string, string>();
 
   constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -206,21 +210,21 @@ export class TextToSpeechService {
 
         this.startKeepAlive(synth, requestId);
 
-        // If synthesis does not start within 900ms, fall back to stream
+        // If synthesis does not start within 220ms, fall back immediately to high-fidelity stream
         startCheck = setTimeout(() => {
           if (settled || started || !isCurrent()) return;
           if (!synth.speaking && !synth.pending) {
             console.warn('[TTS] Synthesis stalled or dropped, falling back to audio stream.');
             fallbackToStream();
           }
-        }, 900);
+        }, 220);
       };
 
       if (synth.speaking || synth.pending) {
         try {
           synth.cancel();
         } catch { /* ignored */ }
-        window.setTimeout(startNow, 60);
+        window.setTimeout(startNow, 30);
       } else {
         startNow();
       }
@@ -240,10 +244,48 @@ export class TextToSpeechService {
     });
   }
 
+  private getPersistentAudio(): HTMLAudioElement | null {
+    if (typeof window === 'undefined') return null;
+    if (!this.persistentAudio) {
+      try {
+        const el = document.createElement('audio');
+        (el as any).referrerPolicy = 'no-referrer';
+        el.setAttribute('referrerpolicy', 'no-referrer');
+        el.style.display = 'none';
+        document.body.appendChild(el);
+        this.persistentAudio = el;
+      } catch {
+        this.persistentAudio = new Audio();
+        try {
+          (this.persistentAudio as any).referrerPolicy = 'no-referrer';
+          this.persistentAudio.setAttribute('referrerpolicy', 'no-referrer');
+        } catch { /* ignored */ }
+      }
+    }
+    return this.persistentAudio;
+  }
+
+  /**
+   * Pre-warms audio cache for a phrase in the background so tap playback is 100% instant.
+   */
+  public preload(text: string, localeCode: string, isSlow: boolean = false): void {
+    if (typeof window === 'undefined') return;
+    const clean = (text ?? '').trim();
+    if (!clean) return;
+    const langCode = this.extractLangCode(localeCode);
+    const speedTag = isSlow ? 'slow' : 'normal';
+    const cacheKey = `${langCode}:${clean}:${speedTag}`;
+    if (this.streamUrlCache.has(cacheKey)) return;
+
+    const speedParam = isSlow ? '&ttsspeed=0.24' : '&ttsspeed=1';
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(langCode)}&q=${encodeURIComponent(clean)}${speedParam}`;
+    this.streamUrlCache.set(cacheKey, url);
+  }
+
   /**
    * Plays crystal-clear native speech via web audio streaming.
-   * Tries multiple robust endpoints with no-referrer policy so Arabic, Tamil, Japanese,
-   * German, Spanish, and French always play with 100% reliability.
+   * Supports true slow pronunciation via server-side acoustic speed parameters
+   * and client-side playback rate synchronization so Tamil, Arabic, etc. play slowly.
    */
   private playAudioStream(
     text: string,
@@ -259,50 +301,57 @@ export class TextToSpeechService {
         return;
       }
 
+      const audio = this.getPersistentAudio();
+      if (!audio) {
+        this.isPlaying.set(false);
+        this.currentSpeakingText.set(null);
+        resolve();
+        return;
+      }
+
       const isCurrent = () => requestId === this.requestId;
       let settled = false;
       let endpointIndex = 0;
       let watchdog: ReturnType<typeof setTimeout> | undefined;
 
-      const endpoints = [
-        `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(langCode)}&q=${encodeURIComponent(text)}`,
-        `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${encodeURIComponent(langCode)}&q=${encodeURIComponent(text)}`,
-        `https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&tl=${encodeURIComponent(langCode)}&q=${encodeURIComponent(text)}`,
-      ];
+      const isSlowMode = rate < 0.9 || this.isSlow();
+      const speedTag = isSlowMode ? 'slow' : 'normal';
+      const cacheKey = `${langCode}:${text}:${speedTag}`;
+      const cachedUrl = this.streamUrlCache.get(cacheKey);
 
-      // Create audio element with strict no-referrer policy
-      let audio: HTMLAudioElement;
-      try {
-        audio = document.createElement('audio');
-        (audio as any).referrerPolicy = 'no-referrer';
-        audio.setAttribute('referrerpolicy', 'no-referrer');
-        audio.style.display = 'none';
-        document.body.appendChild(audio);
-      } catch {
-        audio = new Audio();
-        try {
-          (audio as any).referrerPolicy = 'no-referrer';
-          audio.setAttribute('referrerpolicy', 'no-referrer');
-        } catch { /* ignored */ }
-      }
+      const speedParam = isSlowMode ? '&ttsspeed=0.24' : '&ttsspeed=1';
+
+      const endpoints = cachedUrl
+        ? [cachedUrl]
+        : [
+          `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(langCode)}&q=${encodeURIComponent(text)}${speedParam}`,
+          `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${encodeURIComponent(langCode)}&q=${encodeURIComponent(text)}${speedParam}`,
+          `https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&tl=${encodeURIComponent(langCode)}&q=${encodeURIComponent(text)}${speedParam}`,
+        ];
 
       this.activeAudio = audio;
       audio.preload = 'auto';
-      audio.playbackRate = this.clampRate(rate);
+
+      const targetPlaybackRate = isSlowMode ? 0.75 : 1.0;
+      const applyPlaybackRate = () => {
+        try {
+          audio.defaultPlaybackRate = targetPlaybackRate;
+          audio.playbackRate = targetPlaybackRate;
+        } catch { /* ignored */ }
+      };
 
       const finish = () => {
         if (settled) return;
         settled = true;
         if (watchdog) clearTimeout(watchdog);
-        if (this.activeAudio) {
+        if (this.activeAudio === audio) {
           try {
-            this.activeAudio.onplay = null;
-            this.activeAudio.onended = null;
-            this.activeAudio.onerror = null;
-            this.activeAudio.pause();
-            if (this.activeAudio.parentNode) {
-              this.activeAudio.parentNode.removeChild(this.activeAudio);
-            }
+            audio.onplay = null;
+            audio.onended = null;
+            audio.onerror = null;
+            audio.onloadedmetadata = null;
+            audio.oncanplay = null;
+            audio.pause();
           } catch { /* ignored */ }
           this.activeAudio = null;
         }
@@ -323,7 +372,6 @@ export class TextToSpeechService {
         if (endpointIndex < endpoints.length) {
           tryPlayCurrent();
         } else {
-          // Acoustic feedback so user always gets audio response
           try {
             this.sfx.playCardFlip();
           } catch { /* ignored */ }
@@ -335,11 +383,17 @@ export class TextToSpeechService {
       const tryPlayCurrent = () => {
         if (settled || !isCurrent()) return;
         try {
-          audio.src = endpoints[endpointIndex];
+          const targetUrl = endpoints[endpointIndex];
+          audio.src = targetUrl;
+          applyPlaybackRate();
           audio.load();
+          applyPlaybackRate();
           const p = audio.play();
           if (p) {
-            p.catch((err) => {
+            p.then(() => {
+              applyPlaybackRate();
+              this.streamUrlCache.set(cacheKey, targetUrl);
+            }).catch((err) => {
               console.warn(`[TTS] Audio endpoint ${endpointIndex} failed:`, err);
               tryNextEndpoint();
             });
@@ -350,11 +404,20 @@ export class TextToSpeechService {
         }
       };
 
+      audio.onloadedmetadata = () => {
+        applyPlaybackRate();
+      };
+
+      audio.oncanplay = () => {
+        applyPlaybackRate();
+      };
+
       audio.onplay = () => {
         if (!isCurrent()) {
           finish();
           return;
         }
+        applyPlaybackRate();
         this.isPlaying.set(true);
         this.currentSpeakingText.set(text);
         this.lastError.set(null);
@@ -455,12 +518,11 @@ export class TextToSpeechService {
 
     if (this.activeAudio) {
       try {
+        this.activeAudio.onplay = null;
+        this.activeAudio.onended = null;
+        this.activeAudio.onerror = null;
         this.activeAudio.pause();
         this.activeAudio.currentTime = 0;
-        this.activeAudio.src = '';
-        if (this.activeAudio.parentNode) {
-          this.activeAudio.parentNode.removeChild(this.activeAudio);
-        }
       } catch { /* ignored */ }
       this.activeAudio = null;
     }
