@@ -73,10 +73,10 @@ interface InteractiveSample {
           </a>
 
           <div class="hidden items-center gap-1 rounded-full border border-stone-900/10 bg-white/60 p-1 lg:flex dark:border-sun-300/10 dark:bg-white/5">
-            <a href="#languages" (click)="sfx.playCardFlip()" class="rounded-full px-4 py-2 text-xs font-bold text-stone-600 transition-all hover:bg-sun-300 hover:text-stone-950 dark:text-stone-300 dark:hover:bg-sun-400/20 dark:hover:text-sun-200">Languages</a>
-            <a href="#method" (click)="sfx.playCardFlip()" class="rounded-full px-4 py-2 text-xs font-bold text-stone-600 transition-all hover:bg-sun-300 hover:text-stone-950 dark:text-stone-300 dark:hover:bg-sun-400/20 dark:hover:text-sun-200">How it works</a>
-            <a href="#scenarios" (click)="sfx.playCardFlip()" class="rounded-full px-4 py-2 text-xs font-bold text-stone-600 transition-all hover:bg-sun-300 hover:text-stone-950 dark:text-stone-300 dark:hover:bg-sun-400/20 dark:hover:text-sun-200">14 Scenarios</a>
-            <a href="#playground" (click)="sfx.playCardFlip()" class="rounded-full px-4 py-2 text-xs font-bold text-stone-600 transition-all hover:bg-sun-300 hover:text-stone-950 dark:text-stone-300 dark:hover:bg-sun-400/20 dark:hover:text-sun-200">Playground</a>
+            <a href="#languages" (click)="scrollToSection($event, 'languages')" class="rounded-full px-4 py-2 text-xs font-bold text-stone-600 transition-all hover:bg-sun-300 hover:text-stone-950 dark:text-stone-300 dark:hover:bg-sun-400/20 dark:hover:text-sun-200">Languages</a>
+            <a href="#method" (click)="scrollToSection($event, 'method')" class="rounded-full px-4 py-2 text-xs font-bold text-stone-600 transition-all hover:bg-sun-300 hover:text-stone-950 dark:text-stone-300 dark:hover:bg-sun-400/20 dark:hover:text-sun-200">How it works</a>
+            <a href="#scenarios" (click)="scrollToSection($event, 'scenarios')" class="rounded-full px-4 py-2 text-xs font-bold text-stone-600 transition-all hover:bg-sun-300 hover:text-stone-950 dark:text-stone-300 dark:hover:bg-sun-400/20 dark:hover:text-sun-200">14 Scenarios</a>
+            <a href="#playground" (click)="scrollToPlayground($event)" class="rounded-full px-4 py-2 text-xs font-bold text-stone-600 transition-all hover:bg-sun-300 hover:text-stone-950 dark:text-stone-300 dark:hover:bg-sun-400/20 dark:hover:text-sun-200">Playground</a>
           </div>
 
           <div class="flex items-center gap-2">
@@ -209,7 +209,7 @@ interface InteractiveSample {
           </div>
 
           <!-- RIGHT: Interactive pocket phrasebook -->
-          <div id="playground" class="relative mx-auto w-full max-w-[30rem] lg:max-w-none" (mouseenter)="demoHovered.set(true)" (mouseleave)="demoHovered.set(false)">
+          <div id="playground" class="scroll-mt-24 relative mx-auto w-full max-w-[30rem] lg:max-w-none" (mouseenter)="demoHovered.set(true)" (mouseleave)="demoHovered.set(false)">
 
             <!-- Sun disc -->
             <div class="pointer-events-none absolute -top-8 left-1/2 h-[25rem] w-[25rem] -translate-x-1/2 rounded-full sunburst-bg opacity-80 animate-spin-slow sm:h-[29rem] sm:w-[29rem]"></div>
@@ -238,7 +238,8 @@ interface InteractiveSample {
               appTilt
               [tiltMax]="4"
               [tiltScale]="1.012"
-              class="tilt-wrap tilt-shine relative z-10 overflow-hidden rounded-[2rem] border-2 border-stone-950/90 bg-white shadow-[12px_12px_0_0_#F5B800] transition-shadow dark:border-sun-200/70 dark:bg-[#161208] dark:shadow-[12px_12px_0_0_rgba(255,210,30,0.9)]"
+              class="tilt-wrap tilt-shine relative z-10 overflow-hidden rounded-[2rem] border-2 border-stone-950/90 bg-white shadow-[12px_12px_0_0_#F5B800] transition-all duration-300 dark:border-sun-200/70 dark:bg-[#161208] dark:shadow-[12px_12px_0_0_rgba(255,210,30,0.9)]"
+              [ngClass]="isPlaygroundActive() ? 'ring-4 ring-indigo-500 shadow-[0_0_50px_rgba(99,102,241,0.65)] scale-[1.02]' : ''"
             >
               <!-- Card header -->
               <div class="flex items-center justify-between gap-3 border-b-2 border-stone-950/10 bg-sun-300 px-5 py-3 text-stone-950 dark:border-sun-200/20 dark:bg-sun-400">
@@ -246,7 +247,12 @@ interface InteractiveSample {
                   <span class="h-2 w-2 rounded-full bg-stone-950 animate-pulse"></span>
                   Pocket phrasebook
                 </div>
-                <span class="rounded-full border border-stone-950/20 bg-white/40 px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider">Live demo</span>
+                <div class="flex items-center gap-1.5">
+                  <span *ngIf="isPlaygroundActive()" class="animate-pulse rounded-full bg-indigo-600 px-2 py-0.5 text-[9px] font-mono font-extrabold uppercase tracking-wider text-white shadow-sm">
+                    ✨ Playground Active
+                  </span>
+                  <span class="rounded-full border border-stone-950/20 bg-white/40 px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider">Live demo</span>
+                </div>
               </div>
 
               <!-- Language tabs -->
@@ -395,7 +401,7 @@ interface InteractiveSample {
       <!-- ============================================================ -->
       <!-- LANGUAGES                                                    -->
       <!-- ============================================================ -->
-      <section id="languages" class="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+      <section id="languages" class="scroll-mt-24 relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
         <div class="mx-auto max-w-2xl text-center" appReveal>
           <span class="inline-flex items-center gap-2 rounded-full border border-sun-600/25 bg-sun-100 px-3.5 py-1 text-[10px] font-mono font-extrabold uppercase tracking-[0.18em] text-sun-800 dark:border-sun-300/20 dark:bg-sun-400/10 dark:text-sun-200">
             <span>🌍</span> Pick your adventure
@@ -470,7 +476,7 @@ interface InteractiveSample {
       <!-- ============================================================ -->
       <!-- METHOD                                                       -->
       <!-- ============================================================ -->
-      <section id="method" class="relative border-y border-stone-900/10 bg-white/70 py-20 dark:border-sun-300/10 dark:bg-white/[0.02] sm:py-24">
+      <section id="method" class="scroll-mt-24 relative border-y border-stone-900/10 bg-white/70 py-20 dark:border-sun-300/10 dark:bg-white/[0.02] sm:py-24">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="mx-auto max-w-2xl text-center" appReveal>
             <span class="inline-flex items-center gap-2 rounded-full border border-sun-600/25 bg-sun-100 px-3.5 py-1 text-[10px] font-mono font-extrabold uppercase tracking-[0.18em] text-sun-800 dark:border-sun-300/20 dark:bg-sun-400/10 dark:text-sun-200">
@@ -520,7 +526,7 @@ interface InteractiveSample {
       <!-- ============================================================ -->
       <!-- SCENARIOS                                                    -->
       <!-- ============================================================ -->
-      <section id="scenarios" class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+      <section id="scenarios" class="scroll-mt-24 mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
           <div appReveal>
             <span class="inline-flex items-center gap-2 rounded-full border border-sun-600/25 bg-sun-100 px-3.5 py-1 text-[10px] font-mono font-extrabold uppercase tracking-[0.18em] text-sun-800 dark:border-sun-300/20 dark:bg-sun-400/10 dark:text-sun-200">
@@ -706,7 +712,7 @@ interface InteractiveSample {
                 <span>Start free</span>
                 <span class="text-lg transition-transform duration-300 group-hover:translate-x-1">→</span>
               </a>
-              <a href="#playground" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-stone-950/25 bg-white/40 px-7 py-4 text-sm font-extrabold text-stone-900 transition-colors hover:bg-white/70 sm:w-auto">
+              <a href="#playground" (click)="scrollToPlayground($event)" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-stone-950/25 bg-white/40 px-7 py-4 text-sm font-extrabold text-stone-900 transition-colors hover:bg-white/70 sm:w-auto">
                 🎧 Try a phrase first
               </a>
             </div>
@@ -763,6 +769,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
 
   public activeSampleIndex = signal<number>(0);
   public isPlayingSample = signal<boolean>(false);
+  public isPlaygroundActive = signal<boolean>(false);
   public demoHovered = signal<boolean>(false);
   public phraseAnimated = signal<boolean>(true);
   public currentYear = new Date().getFullYear();
@@ -778,6 +785,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   private rotateTimer?: ReturnType<typeof setInterval>;
   private animationTimer?: ReturnType<typeof setTimeout>;
   private speakTimer?: ReturnType<typeof setTimeout>;
+  private highlightTimeout?: ReturnType<typeof setTimeout>;
   private sampleRequestId = 0;
 
   public samples: InteractiveSample[] = [
@@ -823,6 +831,39 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     if (this.rotateTimer) clearInterval(this.rotateTimer);
     if (this.animationTimer) clearTimeout(this.animationTimer);
     if (this.speakTimer) clearTimeout(this.speakTimer);
+    if (this.highlightTimeout) clearTimeout(this.highlightTimeout);
+  }
+
+  scrollToSection(event: Event, sectionId: string): void {
+    event.preventDefault();
+    this.sfx.playCardFlip();
+    if (typeof document === 'undefined') return;
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  scrollToPlayground(event: Event): void {
+    event.preventDefault();
+    this.sfx.playWhoosh();
+    if (typeof document === 'undefined') return;
+    const el = document.getElementById('playground');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    this.activatePlaygroundSpotlight();
+  }
+
+  activatePlaygroundSpotlight(): void {
+    this.isPlaygroundActive.set(true);
+    if (this.highlightTimeout) clearTimeout(this.highlightTimeout);
+    this.highlightTimeout = setTimeout(() => {
+      this.isPlaygroundActive.set(false);
+    }, 2800);
+
+    // Immediately speak the current phrase with dancing equalizers
+    this.playSample();
   }
 
   selectSample(idx: number): void {
