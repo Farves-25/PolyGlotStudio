@@ -162,12 +162,13 @@ export class SidebarComponent {
 
   public navItems: NavItem[] = [
     { label: 'Dashboard & Analytics', icon: '📊', link: '/dashboard' },
-    { label: 'Travel Phrasebook', icon: '📖', link: '/learn', dynamic: true, badge: '420+' },
     { label: 'Curriculum Roadmap', icon: '🗺️', link: '/curriculum' },
-    { label: 'Interactive Studio', icon: '🎙️', link: '/studio' },
-    { label: 'Vocabulary Vault', icon: '📚', link: '/vocabulary' },
+    { label: 'Alphabet & Script', icon: '🔤', link: '/alphabet', badge: 'A-Z' },
     { label: 'Phonetics & IPA Lab', icon: '🔬', link: '/phonetics' },
     { label: 'Grammar Matrix', icon: '🧩', link: '/grammar' },
+    { label: 'Vocabulary Vault', icon: '📚', link: '/vocabulary' },
+    { label: 'Travel Phrasebook', icon: '📖', link: '/learn', dynamic: true, badge: '420+' },
+    { label: 'Interactive Studio', icon: '🎙️', link: '/studio' },
     { label: 'AI Dialogue Arena', icon: '🎭', link: '/roleplay' },
     { label: 'Diamond League', icon: '🏆', link: '/leaderboard' },
     { label: 'Studio Settings', icon: '⚙️', link: '/settings' },

@@ -204,12 +204,13 @@ export class HeaderComponent {
 
   public mobileNav = [
     { icon: '📊', label: 'Dashboard', link: '/dashboard' },
-    { icon: '📖', label: 'Phrasebook', link: '/learn/es' },
     { icon: '🗺️', label: 'Curriculum', link: '/curriculum' },
-    { icon: '🎙️', label: 'Studio', link: '/studio' },
-    { icon: '📚', label: 'Vocabulary', link: '/vocabulary' },
+    { icon: '🔤', label: 'Alphabet', link: '/alphabet' },
     { icon: '🔬', label: 'Phonetics', link: '/phonetics' },
     { icon: '🧩', label: 'Grammar', link: '/grammar' },
+    { icon: '📚', label: 'Vocabulary', link: '/vocabulary' },
+    { icon: '📖', label: 'Phrasebook', link: '/learn/es' },
+    { icon: '🎙️', label: 'Studio', link: '/studio' },
     { icon: '🎭', label: 'Roleplay', link: '/roleplay' },
     { icon: '🏆', label: 'League', link: '/leaderboard' },
     { icon: '⚙️', label: 'Settings', link: '/settings' },
@@ -231,6 +232,7 @@ export class HeaderComponent {
     const url = this.currentUrl().split('?')[0];
     switch (url) {
       case '/curriculum': return 'Curriculum Roadmap';
+      case '/alphabet': return 'Alphabet & Script Studio';
       case '/studio': return 'Interactive Studio';
       case '/vocabulary': return 'Vocabulary Vault';
       case '/phonetics': return 'Phonetics & IPA Lab';
@@ -246,12 +248,13 @@ export class HeaderComponent {
     const url = this.currentUrl().split('?')[0];
     const lang = this.langService.selectedLanguage().id;
     switch (url) {
-      case '/dashboard': return { label: 'Explore Phrasebook', link: '/learn/' + lang };
-      case '/curriculum': return { label: 'Interactive Studio', link: '/studio' };
-      case '/studio': return { label: 'Vocabulary Vault', link: '/vocabulary' };
-      case '/vocabulary': return { label: 'Phonetics Lab', link: '/phonetics' };
+      case '/dashboard': return { label: 'Course Curriculum', link: '/curriculum' };
+      case '/curriculum': return { label: 'Alphabet & Script', link: '/alphabet' };
+      case '/alphabet': return { label: 'Phonetics Lab', link: '/phonetics' };
       case '/phonetics': return { label: 'Grammar Matrix', link: '/grammar' };
-      case '/grammar': return { label: 'AI Dialogue Arena', link: '/roleplay' };
+      case '/grammar': return { label: 'Vocabulary Vault', link: '/vocabulary' };
+      case '/vocabulary': return { label: 'Travel Phrasebook', link: '/learn/' + lang };
+      case '/studio': return { label: 'AI Dialogue Arena', link: '/roleplay' };
       case '/roleplay': return { label: 'Diamond League', link: '/leaderboard' };
       case '/leaderboard': return { label: 'Studio Settings', link: '/settings' };
       default: return null;

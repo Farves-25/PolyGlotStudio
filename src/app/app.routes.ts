@@ -49,6 +49,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/curriculum/curriculum.component').then(m => m.CurriculumComponent)
   },
   {
+    path: 'alphabet',
+    loadComponent: () => import('./features/alphabet/alphabet-studio.component').then(m => m.AlphabetStudioComponent)
+  },
+  {
     path: 'studio',
     loadComponent: () => import('./features/lesson-studio/lesson-runner.component').then(m => m.LessonRunnerComponent)
   },

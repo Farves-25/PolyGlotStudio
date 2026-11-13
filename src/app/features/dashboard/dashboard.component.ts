@@ -215,10 +215,10 @@ export class DashboardComponent {
   ];
 
   public modules = [
-    { title: 'Acoustic Verifier', description: 'Live microphone waveform & Levenshtein accuracy distance.', cta: 'Launch studio', icon: '🎙️', link: '/studio', iconClass: 'bg-sun-100 border-sun-600/25 text-sun-800 dark:bg-sun-400/10 dark:border-sun-300/20 dark:text-sun-300' },
-    { title: 'Syntax & Conjugation', description: 'POS constituents, particle mechanics, and verb matrices.', cta: 'Open matrix', icon: '🧩', link: '/grammar', iconClass: 'bg-orange-100 border-orange-600/25 text-orange-800 dark:bg-orange-400/10 dark:border-orange-300/20 dark:text-orange-300' },
-    { title: 'SM-2 Spaced Recall', description: 'A 3D flashcard loop governed by the SuperMemo SM-2 engine.', cta: 'Review cards', icon: '📚', link: '/vocabulary', iconClass: 'bg-emerald-100 border-emerald-600/25 text-emerald-800 dark:bg-emerald-400/10 dark:border-emerald-300/20 dark:text-emerald-300' },
-    { title: 'AI Dialogue Arena', description: 'Simulated cultural scenarios with real-time AI responses.', cta: 'Enter scenarios', icon: '🎭', link: '/roleplay', iconClass: 'bg-rose-100 border-rose-600/25 text-rose-800 dark:bg-rose-400/10 dark:border-rose-300/20 dark:text-rose-300' },
+    { title: 'Alphabet & Script', description: 'Letters, native phonics, and acoustic ear training recognition.', cta: 'Master script', icon: '🔤', link: '/alphabet', iconClass: 'bg-indigo-100 border-indigo-600/25 text-indigo-800 dark:bg-indigo-400/10 dark:border-indigo-300/20 dark:text-indigo-300' },
+    { title: 'Course Roadmap', description: '6-stage structured curriculum from phonics to conversational mastery.', cta: 'View curriculum', icon: '🗺️', link: '/curriculum', iconClass: 'bg-sun-100 border-sun-600/25 text-sun-800 dark:bg-sun-400/10 dark:border-sun-300/20 dark:text-sun-300' },
+    { title: 'Syntax & Conjugation', description: 'Language typology, word order, and interactive verb matrices.', cta: 'Open matrix', icon: '🧩', link: '/grammar', iconClass: 'bg-orange-100 border-orange-600/25 text-orange-800 dark:bg-orange-400/10 dark:border-orange-300/20 dark:text-orange-300' },
+    { title: 'SM-2 Spaced Recall', description: 'Thematic vocabulary decks governed by the SuperMemo SM-2 engine.', cta: 'Review cards', icon: '📚', link: '/vocabulary', iconClass: 'bg-emerald-100 border-emerald-600/25 text-emerald-800 dark:bg-emerald-400/10 dark:border-emerald-300/20 dark:text-emerald-300' },
   ];
 
   getHeatmapClass(count: number): string {
