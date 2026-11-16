@@ -78,19 +78,137 @@ create index if not exists idx_lessons_lang on public.lessons(language_id, order
 create index if not exists idx_exercises_lesson on public.exercises(lesson_id, order_index);
 create index if not exists idx_srs_due on public.user_srs_progress(user_id, due_date);
 
--- Enable RLS
-alter table public.languages enable row level security;
-alter table public.lessons enable row level security;
-alter table public.exercises enable row level security;
+-- Enable RLS, least-privilege grants and policies
+-- Access: catalog tables public read-only; SRS/roleplay owner-only (authenticated).
+begin;
+
+-- 1. Enable RLS on every app table -------------------------------------
+alter table public.languages         enable row level security;
+alter table public.lessons           enable row level security;
+alter table public.exercises         enable row level security;
 alter table public.user_srs_progress enable row level security;
 alter table public.roleplay_sessions enable row level security;
 
--- Policies
-create policy if not exists "Allow public read on languages" on public.languages for select using (true);
-create policy if not exists "Allow public read on lessons" on public.lessons for select using (true);
-create policy if not exists "Allow public read on exercises" on public.exercises for select using (true);
-create policy if not exists "Users manage own SRS progress" on public.user_srs_progress for all using (auth.uid() = user_id);
-create policy if not exists "Users manage roleplay" on public.roleplay_sessions for all using (auth.uid() = user_id);
+-- 2. Reset privileges, then grant only what is needed -------------------
+revoke all on table public.languages, public.lessons, public.exercises,
+                    public.user_srs_progress, public.roleplay_sessions
+  from anon, authenticated;
+
+grant select on public.languages, public.lessons, public.exercises
+  to anon, authenticated;
+grant select, insert, update, delete
+  on public.user_srs_progress, public.roleplay_sessions
+  to authenticated;
+
+-- 3. Drop old open policies (names from the previous schema) ------------
+drop policy if exists "Allow public read on languages" on public.languages;
+drop policy if exists "Allow public read on lessons"   on public.lessons;
+drop policy if exists "Allow public read on exercises" on public.exercises;
+drop policy if exists "Users manage own SRS progress"  on public.user_srs_progress;
+drop policy if exists "Users manage roleplay"          on public.roleplay_sessions;
+
+-- 4. Catalog: read-only for everyone -------------------------------------
+drop policy if exists languages_select on public.languages;
+create policy languages_select on public.languages
+  for select to anon, authenticated using (true);
+
+drop policy if exists lessons_select on public.lessons;
+create policy lessons_select on public.lessons
+  for select to anon, authenticated using (true);
+
+drop policy if exists exercises_select on public.exercises;
+create policy exercises_select on public.exercises
+  for select to anon, authenticated using (true);
+
+-- 5. user_srs_progress: owner only ---------------------------------------
+drop policy if exists srs_select on public.user_srs_progress;
+create policy srs_select on public.user_srs_progress
+  for select to authenticated
+  using (user_id::text = (select auth.uid())::text);
+
+drop policy if exists srs_insert on public.user_srs_progress;
+create policy srs_insert on public.user_srs_progress
+  for insert to authenticated
+  with check (user_id::text = (select auth.uid())::text);
+
+drop policy if exists srs_update on public.user_srs_progress;
+create policy srs_update on public.user_srs_progress
+  for update to authenticated
+  using (user_id::text = (select auth.uid())::text)
+  with check (user_id::text = (select auth.uid())::text);
+
+drop policy if exists srs_delete on public.user_srs_progress;
+create policy srs_delete on public.user_srs_progress
+  for delete to authenticated
+  using (user_id::text = (select auth.uid())::text);
+
+-- 6. roleplay_sessions: owner only ---------------------------------------
+drop policy if exists roleplay_select on public.roleplay_sessions;
+create policy roleplay_select on public.roleplay_sessions
+  for select to authenticated
+  using (user_id::text = (select auth.uid())::text);
+
+drop policy if exists roleplay_insert on public.roleplay_sessions;
+create policy roleplay_insert on public.roleplay_sessions
+  for insert to authenticated
+  with check (user_id::text = (select auth.uid())::text);
+
+drop policy if exists roleplay_update on public.roleplay_sessions;
+create policy roleplay_update on public.roleplay_sessions
+  for update to authenticated
+  using (user_id::text = (select auth.uid())::text)
+  with check (user_id::text = (select auth.uid())::text);
+
+drop policy if exists roleplay_delete on public.roleplay_sessions;
+create policy roleplay_delete on public.roleplay_sessions
+  for delete to authenticated
+  using (user_id::text = (select auth.uid())::text);
+
+-- 7. Immutability triggers (ownership / parent keys can't change) -------
+-- Kept in a private schema that API roles cannot use.
+create schema if not exists private;
+revoke all on schema private from anon, authenticated;
+
+create or replace function private.protect_srs_keys()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  if new.user_id::text is distinct from old.user_id::text
+     or new.exercise_id::text is distinct from old.exercise_id::text then
+    raise exception 'user_id and exercise_id cannot be changed';
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function private.protect_roleplay_keys()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  if new.user_id::text is distinct from old.user_id::text then
+    raise exception 'user_id cannot be changed';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_protect_srs_keys on public.user_srs_progress;
+create trigger trg_protect_srs_keys
+  before update on public.user_srs_progress
+  for each row execute function private.protect_srs_keys();
+
+drop trigger if exists trg_protect_roleplay_keys on public.roleplay_sessions;
+create trigger trg_protect_roleplay_keys
+  before update on public.roleplay_sessions
+  for each row execute function private.protect_roleplay_keys();
+
+commit;
 `;
 
 @Component({
