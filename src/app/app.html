@@ -44,6 +44,20 @@
     *ngIf="showSupabaseModal()"
     (close)="closeSupabase()"
   ></app-supabase-config-modal>
+
+  <!-- SET NEW PASSWORD (after opening a reset email link) -->
+  <div *ngIf="auth.recoveryMode()" class="fixed inset-0 z-50 grid place-items-center bg-stone-950/60 p-4">
+    <form (ngSubmit)="saveNewPassword()" class="w-full max-w-sm rounded-2xl border-2 border-stone-950 bg-white dark:bg-[#1D1709] p-5 space-y-3 shadow-[6px_6px_0_0_#1c1917]">
+      <h2 class="text-sm font-extrabold">Set a new password</h2>
+      <p class="text-xs text-stone-500 dark:text-stone-400">After this, you can sign in with email and password or with Google.</p>
+      <input type="password" [(ngModel)]="newPassword" name="newPassword" placeholder="New password" autocomplete="new-password" required
+        class="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFBF0] dark:bg-[#0C0A05] border border-slate-200 dark:border-zinc-800 text-xs" />
+      <div class="flex gap-2">
+        <button type="submit" [disabled]="auth.isLoading()" class="flex-1 py-2.5 rounded-xl border-2 border-stone-950 bg-sun-400 text-stone-950 text-xs font-extrabold disabled:opacity-50">Save password</button>
+        <button type="button" (click)="auth.recoveryMode.set(false)" class="px-3 text-xs underline">Cancel</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- GLOBAL TOAST NOTIFICATION DRAWER -->

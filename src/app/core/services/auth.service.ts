@@ -31,6 +31,8 @@ export class AuthService {
   public readonly currentUser = signal<UserProfile | null>(null);
   public readonly isAuthenticated = computed(() => !!this.currentUser());
   public readonly isLoading = signal<boolean>(false);
+  /** True after the user opens a password-reset email link; shows the "set new password" dialog. */
+  public readonly recoveryMode = signal<boolean>(false);
 
   constructor() {
     this.restoreSession();
@@ -59,6 +61,9 @@ export class AuthService {
     setTimeout(() => {
       if (this.supabase.client) {
         this.supabase.client.auth.onAuthStateChange((event, session) => {
+          if (event === 'PASSWORD_RECOVERY') {
+            this.recoveryMode.set(true);
+          }
           if (session?.user) {
             const user = session.user;
             const pendingLang = localStorage.getItem('POLYGLOT_PENDING_LANG');
@@ -177,8 +182,56 @@ export class AuthService {
       return true;
     } catch (err: any) {
       this.isLoading.set(false);
-      this.toast.show(err.message || 'Sign in failed. Please check credentials.', 'error');
+      const isBadCreds = /invalid login credentials/i.test(err?.message || '');
+      this.toast.show(
+        isBadCreds
+          ? 'Incorrect email or password. If you signed up with Google, use Continue with Google, or use Forgot password to set one.'
+          : err.message || 'Sign in failed. Please check credentials.',
+        'error'
+      );
       return false;
+    }
+  }
+
+  public async requestPasswordReset(email: string): Promise<boolean> {
+    if (!email.trim()) {
+      this.toast.show('Enter your email first, then click Forgot password.', 'warning');
+      return false;
+    }
+    if (!this.supabase.client || !this.supabase.isConfigured()) {
+      this.toast.show('Password reset needs a connected Supabase project.', 'warning');
+      return false;
+    }
+    this.isLoading.set(true);
+    try {
+      const { error } = await this.supabase.client.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: window.location.origin + '/welcome'
+      });
+      if (error) throw error;
+      this.toast.show('If that email is registered, a reset link is on its way. Check your inbox.', 'success');
+      return true;
+    } catch (err: any) {
+      this.toast.show(err.message || 'Could not send reset email.', 'error');
+      return false;
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  public async updatePassword(newPassword: string): Promise<boolean> {
+    if (!this.supabase.client || !this.supabase.isConfigured()) return false;
+    this.isLoading.set(true);
+    try {
+      const { error } = await this.supabase.client.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      this.recoveryMode.set(false);
+      this.toast.show('Password saved. You can now sign in with email or Google.', 'success');
+      return true;
+    } catch (err: any) {
+      this.toast.show(err.message || 'Could not update password.', 'error');
+      return false;
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
@@ -202,6 +255,10 @@ export class AuthService {
           }
         });
         if (error) throw error;
+        // With email confirmation on, Supabase returns a fake user with no identities for existing emails.
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          throw new Error('User already registered');
+        }
 
         const profile: UserProfile = {
           id: data.user?.id || `user-${Date.now()}`,
@@ -238,7 +295,13 @@ export class AuthService {
       return true;
     } catch (err: any) {
       this.isLoading.set(false);
-      this.toast.show(err.message || 'Registration failed.', 'error');
+      const exists = /already registered|already exists/i.test(err?.message || '');
+      this.toast.show(
+        exists
+          ? 'This email may be registered with Google — use Continue with Google, or reset your password.'
+          : err.message || 'Registration failed.',
+        'error'
+      );
       return false;
     }
   }

@@ -1,5 +1,6 @@
 import { Component, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { SidebarComponent } from './core/components/sidebar/sidebar.component';
@@ -14,6 +15,7 @@ import { AuthService } from './core/services/auth.service';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterModule,
     SidebarComponent,
     HeaderComponent,
@@ -31,6 +33,17 @@ export class App {
   public showSpotlight = signal<boolean>(false);
   public showSupabaseModal = signal<boolean>(false);
   public isStudioView = signal<boolean>(false);
+  public newPassword = '';
+
+  async saveNewPassword() {
+    if (this.newPassword.length < 6) {
+      this.toastService.show('Password must be at least 6 characters.', 'warning');
+      return;
+    }
+    if (await this.auth.updatePassword(this.newPassword)) {
+      this.newPassword = '';
+    }
+  }
 
   constructor() {
     const isPublicRoute = (path: string): boolean =>

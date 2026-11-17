@@ -247,14 +247,51 @@ interface OnboardingOption {
           <div *ngIf="currentStep() === 5" class="space-y-6 max-w-lg mx-auto">
             <div class="text-center">
               <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                {{ authMode === 'signup' ? 'Create your learner profile' : 'Welcome back to PolyglotStudio' }}
+                {{ authMode === 'signup' ? 'Create your learner profile' : authMode === 'forgot' ? 'Reset your password' : 'Welcome back to PolyglotStudio' }}
               </h2>
               <p class="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mt-1.5">
-                {{ authMode === 'signup' ? 'Save your progress, maintain your daily streak, and sync across devices.' : 'Sign in to resume your daily streak and flashcard reviews.' }}
+                {{ authMode === 'signup' ? 'Save your progress, maintain your daily streak, and sync across devices.' : authMode === 'forgot' ? 'We will email you a link to set a new password. This also works if you signed up with Google.' : 'Sign in to resume your daily streak and flashcard reviews.' }}
               </p>
             </div>
 
-            <div class="surface-card p-6 sm:p-8 rounded-3xl border border-slate-200/90 dark:border-zinc-800 shadow-xl space-y-5">
+            <!-- Forgot password -->
+            <div *ngIf="authMode === 'forgot'" class="surface-card p-6 sm:p-8 rounded-3xl border border-slate-200/90 dark:border-zinc-800 shadow-xl space-y-5">
+              <form (submit)="handleForgotSubmit($event)" class="space-y-3.5">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    [(ngModel)]="authEmail"
+                    name="resetEmail"
+                    placeholder="alex@example.com"
+                    required
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFBF0] dark:bg-[#0C0A05] border border-slate-200 dark:border-zinc-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sun-500/20 focus:border-sun-500 transition-all"
+                  />
+                </div>
+                <p *ngIf="resetSent" class="text-xs text-emerald-700 dark:text-emerald-300">
+                  Check your inbox for the reset link. You can resend it if it doesn't arrive.
+                </p>
+                <button
+                  type="submit"
+                  [disabled]="auth.isLoading()"
+                  class="w-full py-3 px-4 rounded-xl border-2 border-stone-950 bg-sun-400 hover:bg-sun-300 disabled:opacity-50 text-stone-950 font-extrabold text-xs shadow-[3px_3px_0_0_#1c1917] transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span *ngIf="auth.isLoading()" class="w-3.5 h-3.5 border-2 border-stone-950/30 border-t-stone-950 rounded-full animate-spin"></span>
+                  <span>{{ resetSent ? 'Resend reset link' : 'Send reset link' }}</span>
+                </button>
+                <button
+                  type="button"
+                  (click)="authMode = 'signin'; resetSent = false"
+                  class="w-full text-center text-[11px] font-mono text-sun-700 dark:text-sun-300 hover:underline"
+                >
+                  ← Back to sign in
+                </button>
+              </form>
+            </div>
+
+            <div *ngIf="authMode !== 'forgot'" class="surface-card p-6 sm:p-8 rounded-3xl border border-slate-200/90 dark:border-zinc-800 shadow-xl space-y-5">
               
               <!-- Tab Switcher: Sign Up vs Sign In -->
               <div class="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200/70 dark:border-zinc-800 text-xs font-semibold">
@@ -353,6 +390,14 @@ interface OnboardingOption {
                     required
                     class="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFBF0] dark:bg-[#0C0A05] border border-slate-200 dark:border-zinc-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sun-500/20 focus:border-sun-500 transition-all"
                   />
+                  <button
+                    *ngIf="authMode === 'signin'"
+                    type="button"
+                    (click)="authMode = 'forgot'"
+                    class="mt-1.5 text-[11px] font-mono text-sun-700 dark:text-sun-300 hover:underline disabled:opacity-50"
+                  >
+                    Forgot password?
+                  </button>
                 </div>
 
                 <button
@@ -417,7 +462,8 @@ export class OnboardingWizardComponent implements OnInit {
   public selectedMinutes = 15;
   public selectedLevel = 'beginner';
 
-  public authMode: 'signup' | 'signin' = 'signup';
+  public authMode: 'signup' | 'signin' | 'forgot' = 'signup';
+  public resetSent = false;
   public authName = '';
   public authEmail = '';
   public authPassword = '';
@@ -549,6 +595,11 @@ export class OnboardingWizardComponent implements OnInit {
         this.completeOnboarding();
       }
     }
+  }
+
+  async handleForgotSubmit(e: Event) {
+    e.preventDefault();
+    this.resetSent = await this.auth.requestPasswordReset(this.authEmail);
   }
 
   handleGuestAccess() {
